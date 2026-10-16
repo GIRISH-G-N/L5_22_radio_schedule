@@ -1,51 +1,68 @@
 # Lab 5: Static Code Analysis — Radio Station Programme Schedule
 
-**Your file:** `radio_schedule.py`
+**Student:** Girish G N  
+**Repository:** https://github.com/GIRISH-G-N/L5_22_radio_schedule  
+**Main program:** `radio_schedule.py`
 
-Follow the lab handout for the full instructions.
+## About the Project
 
-## About the program
+This lab uses Pylint, Bandit, and Flake8 to identify code quality, security, and style issues in a Python radio programme scheduling application.
 
-A programme schedule for a radio station. It books show slots, lists the morning shows, checks timing and removes slots.
+The program supports adding radio show slots, generating show labels, checking timing expressions, listing morning shows, and removing scheduled slots.
 
-The code works, but only just. It has quality, style and security problems of the kind Pylint, Flake8 and Bandit are built to find.
+## Tools Used
 
-## What to do
+- **Pylint:** Checks code quality, naming conventions, documentation, and maintainability.
+- **Bandit:** Identifies potential security vulnerabilities.
+- **Flake8:** Checks Python style and formatting.
 
-1. **Run it first** and read the output carefully:
-   ```bash
-   python radio_schedule.py
-   ```
-   It runs a short demonstration and may create a small output file in the current folder, so run it from a folder you don't mind adding files to.
+## Changes Made
 
-2. **Install the tools:**
-   ```bash
-   pip install pylint bandit flake8
-   ```
+- Replaced dynamically constructed SQL queries with parameterized queries.
+- Removed the hardcoded studio password.
+- Replaced unrestricted `eval()` with a restricted expression evaluator.
+- Renamed functions to follow Python's `snake_case` convention.
+- Added module and function docstrings.
+- Improved code formatting and line lengths.
+- Removed the unnecessary global booking counter.
 
-3. **Run the analysis** and save the reports:
-   ```bash
-   pylint radio_schedule.py > pylint_report.txt
-   bandit -r radio_schedule.py > bandit_report.txt
-   flake8 radio_schedule.py > flake8_report.txt
-   ```
+## Static Analysis Results
 
-4. **Document the issues** in `issues.md` using this table (at least 4 rows, high and medium severity first):
+| Tool | Before | After |
+|---|---|---|
+| Pylint | 2.41/10 | 10.00/10 |
+| Bandit | 3 reported issues | No issues reported |
+| Flake8 | Multiple style violations | No violations |
 
-   | Issue | Type | Line(s) | Description | Fix Approach |
-   |-------|------|---------|-------------|--------------|
-   | ... | ... | ... | ... | ... |
+See the corresponding `*_before.txt` and `*_after.txt` files for the saved reports.
 
-5. **Fix the code.** Fix at least 4 of the issues you documented, then rerun all three tools to confirm they are gone. Repeat until you are satisfied. The program should still do its job when you are done.
+## Running the Program
 
-6. **Reflect.** Answer the four reflection questions from the handout in `reflection.md`.
+Activate the virtual environment, install the required tools, and run:
+
+```bash
+python radio_schedule.py
+```
+
+Run the analysis tools with:
+
+```bash
+pylint radio_schedule.py
+bandit -r radio_schedule.py
+flake8 radio_schedule.py
+```
+
+## Version Control
+
+The project history includes commits for the corrected program, before-and-after analysis reports, and the original program for comparison.
 
 ## Deliverables
 
-1. `radio_schedule.py`: your cleaned version, with at least 4 issues fixed.
-2. `issues.md`: the completed issue table.
-3. `reflection.md`: your answers to the reflection questions.
-
-**Target:** aim for a Pylint score above 9.5 on your final file. A perfect 10.00/10 is very good.
-
-Be ready to explain the bugs you found and how you fixed them. You may be called on to present.
+- `radio_schedule.py` — corrected program.
+- `radio_schedule_before.py` — original program for comparison.
+- `pylint_before.txt` and `pylint_after.txt`.
+- `bandit_before.txt` and `bandit_after.txt`.
+- `flake8_before.txt` and `flake8_after.txt`.
+- `issues.md` — issue table.
+- `reflection.md` — reflection answers.
+- Lab report DOCX — issue table, analysis reports, and reflections.
