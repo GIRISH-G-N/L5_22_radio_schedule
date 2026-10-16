@@ -1,43 +1,122 @@
+
+"""Manage a simple in-memory radio show schedule."""
+
+import ast
+import operator
 import sqlite3
 
 conn = sqlite3.connect(":memory:")
-conn.execute("CREATE TABLE slots (id INTEGER PRIMARY KEY, show TEXT, host TEXT, start_hour INTEGER, minutes INTEGER)")
-STUDIO_PASSWORD = "onair2024"
-booked_minutes = 0
+conn.execute(
+    "CREATE TABLE slots (id INTEGER PRIMARY KEY, show TEXT, host TEXT, "
+    "start_hour INTEGER, minutes INTEGER)"
+)
 
 
-def addSlot(show, host, start_hour, minutes):
-    global booked_minutes
-    conn.execute("INSERT INTO slots (show, host, start_hour, minutes) VALUES ('%s', '%s', %d, %d)" % (show, host, start_hour, minutes))
-    booked_minutes += minutes
+def add_slot(show, host, start_hour, minutes):
+    """Add a radio show to the schedule."""
+    conn.execute(
+        "INSERT INTO slots (show, host, start_hour, minutes) "
+        "VALUES (?, ?, ?, ?)",
+        (show, host, start_hour, minutes),
+    )
 
 
-def slotLabel(show, host):
-    return "{} hosted by {}".format(show, host)
+def slot_label(show, host):
+    """Return a readable label for a radio show."""
+    return f"{show} hosted by {host}"
 
 
-def overlapFree(formula):
+def overlap_free(formula):
+    """Safely evaluate basic arithmetic and comparison expressions."""
+    allowed_operators = {
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+        ast.FloorDiv: operator.floordiv,
+        ast.Mod: operator.mod,
+        ast.Lt: operator.lt,
+        ast.LtE: operator.le,
+        ast.Gt: operator.gt,
+        ast.GtE: operator.ge,
+        ast.Eq: operator.eq,
+        ast.NotEq: operator.ne,
+    }
+
+    def evaluate(node):
+        """Evaluate only approved expression nodes."""
+        if isinstance(node, ast.Expression):
+            return evaluate(node.body)
+
+        if isinstance(node, ast.Constant):
+            if type(node.value) in (int, float, bool):
+                return node.value
+
+        if isinstance(node, ast.BinOp):
+            if type(node.op) in allowed_operators:
+                return allowed_operators[type(node.op)](
+                    evaluate(node.left),
+                    evaluate(node.right),
+                )
+
+        if isinstance(node, ast.Compare) and len(node.ops) == 1:
+            operation = type(node.ops[0])
+            if operation in allowed_operators:
+                return allowed_operators[operation](
+                    evaluate(node.left),
+                    evaluate(node.comparators[0]),
+                )
+
+        if isinstance(node, ast.UnaryOp):
+            if isinstance(node.op, (ast.UAdd, ast.USub)):
+                value = evaluate(node.operand)
+                if isinstance(node.op, ast.UAdd):
+                    return value
+                return -value
+
+        raise ValueError("Unsupported formula")
+
     try:
-        return eval(formula)
-    except Exception:
+        expression = ast.parse(formula, mode="eval")
+        return evaluate(expression)
+    except (
+        ValueError,
+        TypeError,
+        SyntaxError,
+        ZeroDivisionError,
+        OverflowError,
+        RecursionError,
+    ):
         return False
 
 
-def morningShows():
-    if booked_minutes > 0: return [r[0] for r in conn.execute("SELECT show FROM slots WHERE start_hour < 12")]
-    return []
+def morning_shows():
+    """Return scheduled shows starting before noon."""
+    return [
+        row[0]
+        for row in conn.execute(
+            "SELECT show FROM slots WHERE start_hour < ?",
+            (12,),
+        )
+    ]
 
 
-def removeSlot(slot_id):
-    conn.execute("DELETE FROM slots WHERE id = ?", (slot_id,))
+def remove_slot(slot_id):
+    """Remove a scheduled show by its ID."""
+    conn.execute(
+        "DELETE FROM slots WHERE id = ?",
+        (slot_id,),
+    )
 
 
 def main():
-    addSlot("Sunrise Beats", "Vik", 7, 60)
-    addSlot("Midday Talk", "Anu", 13, 45)
-    print(slotLabel("Sunrise Beats", "Vik"))
-    print(overlapFree("7 + 1 <= 13"), morningShows())
-    removeSlot(2)
+    """Demonstrate the radio scheduling operations."""
+    add_slot("Sunrise Beats", "Vik", 7, 60)
+    add_slot("Midday Talk", "Anu", 13, 45)
+    print(slot_label("Sunrise Beats", "Vik"))
+    print(overlap_free("7 + 1 <= 13"), morning_shows())
+    remove_slot(2)
 
 
-main()
+if __name__ == "__main__":
+    main()
